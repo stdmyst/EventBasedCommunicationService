@@ -6,4 +6,4 @@ using EventBasedCommunication.Core.Models;
 var settings = ConfigurationHelpers.GetSettings<AppSettings>(Assembly.GetExecutingAssembly());
 var eventBus = new EventService(settings.RabbitMqHostname);
 
-await eventBus.Receive("hello", "hello");
+await eventBus.Receive("hello");

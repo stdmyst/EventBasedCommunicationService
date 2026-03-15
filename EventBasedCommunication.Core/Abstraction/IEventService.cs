@@ -4,7 +4,7 @@ namespace EventBasedCommunication.Core.Abstraction;
 
 public interface IEventService
 {
-    public Task Publish<T>(T @event, string queue, string routingKey) where T : IEvent;
+    public Task Publish<T>(T @event, string exchange) where T : IEvent;
     
-    public Task Receive(string queue, string routingKey);
+    public Task Receive(string exchange);
 }

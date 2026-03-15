@@ -11,43 +11,40 @@ public class EventService(string host) : IEventService
 {
     private readonly ConnectionFactory _connectionFactory = new() { HostName = host };
 
-    public async Task Publish<T>(T @event, string queue, string routingKey) 
+    public async Task Publish<T>(T @event, string exchange) 
         where T : IEvent
     {
         await using var connection = await _connectionFactory.CreateConnectionAsync();
         await using var channel = await connection.CreateChannelAsync();
-        await channel.QueueDeclareAsync(queue, durable: true, false, false);
-        
-        var properties = new BasicProperties { Persistent = true };
         
         var eventMessage = JsonSerializer.Serialize(@event);
         var eventBytes = Encoding.UTF8.GetBytes(eventMessage);
-        await channel.BasicPublishAsync(string.Empty, routingKey, mandatory: true, basicProperties: properties, eventBytes);
+        await channel.BasicPublishAsync(exchange, routingKey: string.Empty, body:eventBytes);
         
-        Console.WriteLine($"Sent to {queue}/{routingKey} {eventMessage}.");
+        Console.WriteLine($"Sent to {exchange} exchange {eventMessage}.");
     }
 
-    public async Task Receive(string queue, string routingKey)
+    public async Task Receive(string exchange)
     {
         await using var connection = await _connectionFactory.CreateConnectionAsync();
         await using var channel = await connection.CreateChannelAsync();
         
-        await channel.QueueDeclareAsync(queue, true, false, false);
-        
-        await channel.BasicQosAsync(prefetchSize: 0, prefetchCount: 1, global: false);
+        await channel.ExchangeDeclareAsync(exchange, ExchangeType.Fanout);
+        var queue  = await channel.QueueDeclareAsync();
+        await channel.QueueBindAsync(queue, exchange, routingKey: string.Empty);
         
         Console.WriteLine("Waiting for messages.");
 
         var consumer = new AsyncEventingBasicConsumer(channel);
-        consumer.ReceivedAsync += async (_, eventArgs) =>
+        consumer.ReceivedAsync += (_, eventArgs) =>
         {
             var message = JsonSerializer.Deserialize<Event>(eventArgs.Body.ToArray());
-            Console.WriteLine($"Received from {queue}/{routingKey}: {JsonSerializer.Serialize(message)}");
+            Console.WriteLine($"Received from {queue.QueueName}: {JsonSerializer.Serialize(message)}");
             
-            await channel.BasicAckAsync(deliveryTag: eventArgs.DeliveryTag, multiple: false);
+            return Task.CompletedTask;
         };
 
-        await channel.BasicConsumeAsync(queue, autoAck: false, consumer);
+        await channel.BasicConsumeAsync(queue.QueueName, autoAck: true, consumer);
         
         Console.WriteLine(" Press any key to exit.");
         Console.ReadLine();
