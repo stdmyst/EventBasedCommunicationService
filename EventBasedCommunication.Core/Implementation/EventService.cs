@@ -11,30 +11,33 @@ public class EventService(string host) : IEventService
 {
     private readonly ConnectionFactory _connectionFactory = new() { HostName = host };
 
-    public async Task Publish<T>(T @event, string exchange) 
+    public async Task Publish<T>(T @event, string exchange, string routingKey) 
         where T : IEvent
     {
         await using var connection = await _connectionFactory.CreateConnectionAsync();
         await using var channel = await connection.CreateChannelAsync();
         
-        await channel.ExchangeDeclareAsync(exchange, ExchangeType.Fanout);
+        await channel.ExchangeDeclareAsync(exchange, ExchangeType.Direct);
         
         var eventMessage = JsonSerializer.Serialize(@event);
         var eventBytes = Encoding.UTF8.GetBytes(eventMessage);
-        await channel.BasicPublishAsync(exchange, routingKey: string.Empty, body:eventBytes);
+        await channel.BasicPublishAsync(exchange, routingKey: routingKey, body:eventBytes);
         
         Console.WriteLine($"Sent to {exchange} exchange {eventMessage}.");
     }
 
-    public async Task Receive(string exchange)
+    public async Task Receive(string exchange, string[] routingKeys)
     {
         await using var connection = await _connectionFactory.CreateConnectionAsync();
         await using var channel = await connection.CreateChannelAsync();
         
-        await channel.ExchangeDeclareAsync(exchange, ExchangeType.Fanout);
+        await channel.ExchangeDeclareAsync(exchange, ExchangeType.Direct);
         
         var queue  = await channel.QueueDeclareAsync();
-        await channel.QueueBindAsync(queue, exchange, routingKey: string.Empty);
+        foreach (var routingKey in  routingKeys)
+        {
+            await channel.QueueBindAsync(queue.QueueName, exchange, routingKey);
+        }
         
         Console.WriteLine("Waiting for messages.");
 

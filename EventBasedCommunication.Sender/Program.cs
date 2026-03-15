@@ -7,4 +7,6 @@ var settings = ConfigurationHelpers.GetSettings<AppSettings>(Assembly.GetExecuti
 var eventBus = new EventService(settings.RabbitMqHostname);
 var @event = new Event { Id = Guid.NewGuid() };
 
-await eventBus.Publish(@event, "hello");
+var routingKey = args.Length > 0 ? args[0] : "hello";
+
+await eventBus.Publish(@event, exchange: "hello", routingKey);
