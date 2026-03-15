@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <RootNamespace>EventBasedCommunication.Sender</RootNamespace>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.Extensions.Configuration" Version="11.0.0-preview.2.26159.112" />
+      <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="11.0.0-preview.2.26159.112" />
+      <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="11.0.0-preview.2.26159.112" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Update="appsettings.json">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\EventBasedCommunication.Core\EventBasedCommunication.Core.csproj" />
+    </ItemGroup>
+
+</Project>
