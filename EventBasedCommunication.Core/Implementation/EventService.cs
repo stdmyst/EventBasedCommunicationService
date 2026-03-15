@@ -17,6 +17,8 @@ public class EventService(string host) : IEventService
         await using var connection = await _connectionFactory.CreateConnectionAsync();
         await using var channel = await connection.CreateChannelAsync();
         
+        await channel.ExchangeDeclareAsync(exchange, ExchangeType.Fanout);
+        
         var eventMessage = JsonSerializer.Serialize(@event);
         var eventBytes = Encoding.UTF8.GetBytes(eventMessage);
         await channel.BasicPublishAsync(exchange, routingKey: string.Empty, body:eventBytes);
@@ -30,6 +32,7 @@ public class EventService(string host) : IEventService
         await using var channel = await connection.CreateChannelAsync();
         
         await channel.ExchangeDeclareAsync(exchange, ExchangeType.Fanout);
+        
         var queue  = await channel.QueueDeclareAsync();
         await channel.QueueBindAsync(queue, exchange, routingKey: string.Empty);
         
