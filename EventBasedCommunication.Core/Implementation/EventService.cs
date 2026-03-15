@@ -16,11 +16,13 @@ public class EventService(string host) : IEventService
     {
         await using var connection = await _connectionFactory.CreateConnectionAsync();
         await using var channel = await connection.CreateChannelAsync();
-        await channel.QueueDeclareAsync(queue, false, false, false);
+        await channel.QueueDeclareAsync(queue, durable: true, false, false);
+        
+        var properties = new BasicProperties { Persistent = true };
         
         var eventMessage = JsonSerializer.Serialize(@event);
         var eventBytes = Encoding.UTF8.GetBytes(eventMessage);
-        await channel.BasicPublishAsync(string.Empty, routingKey, eventBytes);
+        await channel.BasicPublishAsync(string.Empty, routingKey, mandatory: true, basicProperties: properties, eventBytes);
         
         Console.WriteLine($"Sent to {queue}/{routingKey} {eventMessage}.");
     }
@@ -29,19 +31,25 @@ public class EventService(string host) : IEventService
     {
         await using var connection = await _connectionFactory.CreateConnectionAsync();
         await using var channel = await connection.CreateChannelAsync();
-        await channel.QueueDeclareAsync(queue, false, false, false);
+        
+        await channel.QueueDeclareAsync(queue, true, false, false);
+        
+        await channel.BasicQosAsync(prefetchSize: 0, prefetchCount: 1, global: false);
         
         Console.WriteLine("Waiting for messages.");
 
         var consumer = new AsyncEventingBasicConsumer(channel);
-        consumer.ReceivedAsync += (_, eventArgs) =>
+        consumer.ReceivedAsync += async (_, eventArgs) =>
         {
             var message = JsonSerializer.Deserialize<Event>(eventArgs.Body.ToArray());
             Console.WriteLine($"Received from {queue}/{routingKey}: {JsonSerializer.Serialize(message)}");
             
-            return Task.CompletedTask;
+            await channel.BasicAckAsync(deliveryTag: eventArgs.DeliveryTag, multiple: false);
         };
 
-        await channel.BasicConsumeAsync(queue, autoAck: true, consumer);
+        await channel.BasicConsumeAsync(queue, autoAck: false, consumer);
+        
+        Console.WriteLine(" Press any key to exit.");
+        Console.ReadLine();
     }
 }
