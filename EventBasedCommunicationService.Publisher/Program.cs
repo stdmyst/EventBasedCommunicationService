@@ -3,9 +3,17 @@ using EventBasedCommunicationService;
 using EventBasedCommunicationService.Implementation;
 using EventBasedCommunicationService.Models;
 using EventBasedCommunicationService.Publisher.Models.Events;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
+var assembly = Assembly.GetExecutingAssembly();
 var settings = ConfigurationHelpers.GetSettings<AppSettings>(Assembly.GetExecutingAssembly());
-var eventBus = new EventService(settings.RabbitMqHostname, Assembly.GetExecutingAssembly());
+
+var serviceCollection = new ServiceCollection();
+serviceCollection.AddLogging(builder => builder.AddConsole());
+var services = serviceCollection.BuildServiceProvider();
+
+var eventBus = new EventService(settings.RabbitMqHostname, assembly, services);
 
 var @event = new UserUpdated
 {

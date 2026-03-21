@@ -10,7 +10,7 @@
     <ItemGroup>
       <PackageReference Include="Microsoft.Extensions.Configuration" Version="11.0.0-preview.2.26159.112" />
       <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="11.0.0-preview.2.26159.112" />
-      <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="11.0.0-preview.2.26159.112" />
+      <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="11.0.0-preview.2.26159.112" /><PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" /><PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.0" /><PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.0" />
     </ItemGroup>
 
     <ItemGroup>
