@@ -2,7 +2,9 @@
 
 public interface ISettings;
 
-public record AppSettings : ISettings
+public record EventServiceSettings : ISettings
 {
     public required string RabbitMqHostname { get; init; }
+    
+    public int? TimeoutSeconds { get; init; }
 }

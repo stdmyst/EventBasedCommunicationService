@@ -1,41 +1,33 @@
 ﻿using System.Reflection;
 using EventBasedCommunicationService.Abstraction;
 using EventBasedCommunicationService.Models;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace EventBasedCommunicationService.Implementation;
 
-public class EventResolver
+internal class EventResolver
 {
     private readonly Dictionary<string, HashSet<Type>> _events = new();
-    private readonly Dictionary<Type, HashSet<Func<IEvent, Task>>> _handlers = new();
-
-    private readonly IServiceProvider _services;
-    private readonly ILogger<EventResolver> _logger;
-
+    private readonly Dictionary<Type, HashSet<Type>> _handlers = new();
+    
     public string[] RoutingKeys => _events.Keys.ToArray();
     
-    public EventResolver(Assembly assembly, IServiceProvider services)
+    public EventResolver(Assembly[] assembliesToScan)
     {
-        _services = services;
-        _logger = services.GetService<ILogger<EventResolver>>() 
-                 ?? throw new NullReferenceException("No logger defined.");;
+        var types = assembliesToScan.SelectMany(assembly => assembly.GetTypes())
+            .ToArray();
         
-        var types = assembly.GetTypes();
-        
-        MapEvents(types);
+        MapSubscribers(types);
         
         MapHandlers(types);
     }
 
-    public Type[] GetEvents(string routingKey) 
+    public Type[] GetSubscribers(string routingKey) 
         => _events.TryGetValue(routingKey, out var types) ? types.ToArray() : [];
     
-    public Func<IEvent, Task>[] GetHandlers(Type subscriberType) 
+    public Type[] GetHandlers(Type subscriberType) 
         => _handlers.TryGetValue(subscriberType, out var handlers) ? handlers.ToArray() : [];
-
-    private void MapEvents(Type[] types)
+    
+    private void MapSubscribers(Type[] types)
     {
         var subscribers = types.Where(t 
             => t.GetCustomAttribute<EventSubscribeAttribute>() != null 
@@ -62,18 +54,12 @@ public class EventResolver
 
             foreach (var handlerInterface in handlerInterfaces)
             {
-                var handler = _services.GetService(handlerInterface);
-                var handlerMethodInfo = handler?.GetType().GetMethod(nameof(IEventHandler<>.Handle));
-                if (handler == null || handlerMethodInfo == null) 
-                    continue;
-                
                 var eventType = handlerInterface.GenericTypeArguments[0];
                 
                 if (!_handlers.ContainsKey(eventType))
                     _handlers.TryAdd(eventType, []);
-
-                _handlers[eventType].Add(async @event => await (Task)(handlerMethodInfo.Invoke(handler, parameters: [@event]) 
-                                                                      ?? throw new InvalidOperationException()));
+                
+                _handlers[eventType].Add(handlerInterface);
             }
         }
     }

@@ -1,22 +1,38 @@
-﻿using System.Reflection;
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
 using EventBasedCommunicationService.Abstraction;
-using Microsoft.Extensions.DependencyInjection;
+using EventBasedCommunicationService.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
 namespace EventBasedCommunicationService.Implementation;
 
-public class EventService(string host, Assembly assembly, IServiceProvider services, TimeSpan? timeout = null)
+internal class EventService
     : IPublisher, ISubscriber
 {
-    private readonly TimeSpan _timeout = timeout ?? TimeSpan.FromSeconds(1);
-    private readonly ConnectionFactory _connectionFactory = new() { HostName = host };
-    private readonly EventResolver _eventResolver = new(assembly, services);
-    private readonly ILogger<EventService> _logger = services.GetService<ILogger<EventService>>()
-                                                     ?? throw new NullReferenceException("No logger defined.");
+    private readonly TimeSpan _timeout;
+    private readonly ConnectionFactory _connectionFactory;
+    private readonly ILogger<EventService> _logger;
+    private readonly IServiceProvider _services;
+    private readonly EventResolver _eventResolver;
+
+    public EventService(EventResolver eventResolver, 
+        IOptions<EventServiceSettings> options, 
+        IServiceProvider services, 
+        ILogger<EventService> logger)
+    {
+        var settings = options.Value;
+        _timeout = settings.TimeoutSeconds !=  null 
+            ? TimeSpan.FromSeconds(settings.TimeoutSeconds.Value) 
+            : TimeSpan.FromSeconds(1);
+        
+        _connectionFactory =  new ConnectionFactory { HostName = settings.RabbitMqHostname };
+        _logger = logger;
+        _services = services;
+        _eventResolver = eventResolver;
+    }
 
     public async Task Publish<T>(T @event, string exchange) 
         where T : IEvent
@@ -65,25 +81,33 @@ public class EventService(string host, Assembly assembly, IServiceProvider servi
 
     private async Task Handle(string routingKey, byte[] message)
     {
-        var consumers = _eventResolver.GetEvents(routingKey);
-        if (consumers.Length == 0) return;
+        var subscribers = _eventResolver.GetSubscribers(routingKey);
+        if (subscribers.Length == 0) return;
         
         var body = Encoding.UTF8.GetString(message);
         
-        foreach (var consumer in consumers)
+        foreach (var subscriber in subscribers)
         {
-            var @event = JsonSerializer.Deserialize(body, consumer) as IEvent;
+            var @event = JsonSerializer.Deserialize(body, subscriber) as IEvent;
             if (@event is null) continue;
             
-            var handlers = _eventResolver.GetHandlers(consumer);
-            if (handlers.Length == 0)
+            var handlerInterfaces = _eventResolver.GetHandlers(subscriber);
+            if (handlerInterfaces.Length == 0)
             {
                 _logger.LogInformation(@"No registered handlers found for ""{Type}"".", @event.GetType().FullName);
                 continue;
             }
-            
-            foreach (var handler in handlers)
-                await handler(@event);
+
+            foreach (var handlerInterface in handlerInterfaces)
+            {
+                var handler = _services.GetService(handlerInterface);
+                var handlerMethodInfo = handler?.GetType().GetMethod(nameof(IEventHandler<>.Handle));
+                if (handler == null || handlerMethodInfo == null) 
+                    continue;
+                
+                await (Task)(handlerMethodInfo.Invoke(handler, parameters: [@event]) 
+                             ?? throw new InvalidOperationException());
+            }
         }
     }
 }

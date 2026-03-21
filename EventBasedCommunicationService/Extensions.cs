@@ -1,14 +1,29 @@
 ﻿using System.Reflection;
 using EventBasedCommunicationService.Abstraction;
+using EventBasedCommunicationService.Implementation;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EventBasedCommunicationService;
 
 public static class Extensions
 {
-    public static IServiceCollection RegisterEventHandlers(this IServiceCollection services, Assembly assembly)
+    public static IServiceCollection AddEventBasedCommunicationService(this IServiceCollection services, Assembly[] assemblies)
     {
-        var types = assembly.GetTypes();
+        services.RegisterEventHandlers(assemblies);
+        
+        var eventResolver = new EventResolver(assemblies);
+        services.AddSingleton(eventResolver);
+        
+        services.AddSingleton<IPublisher, EventService>();
+        services.AddSingleton<ISubscriber, EventService>();
+        
+        return services;
+    }
+
+    private static IServiceCollection RegisterEventHandlers(this IServiceCollection services, Assembly[] assemblies)
+    {
+        var types = assemblies.SelectMany(a => a.GetTypes());
         
         foreach (var type in types)
         {
