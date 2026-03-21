@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace EventBasedCommunicationService.Consumer.Models.Events;
 
-public class EchoMessageEventHandler(ILogger<MessageEvent> logger, IPublisher publisher) 
+public class EchoMessageEventHandler(ILogger<EchoMessageEventHandler> logger, IPublisher publisher) 
     : IEventHandler<MessageEvent>
 {
     private const string Exchange = "event-based-communication";
