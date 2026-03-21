@@ -1,8 +1,8 @@
 ﻿using System.Reflection;
-using EventBasedCommunication.Core.Models;
+using EventBasedCommunicationService.Models;
 using Microsoft.Extensions.Configuration;
 
-namespace EventBasedCommunication.Core;
+namespace EventBasedCommunicationService;
 
 public static class ConfigurationHelpers
 {

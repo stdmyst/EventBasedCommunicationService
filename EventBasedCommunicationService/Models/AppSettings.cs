@@ -1,4 +1,4 @@
-﻿namespace EventBasedCommunication.Core.Models;
+﻿namespace EventBasedCommunicationService.Models;
 
 public interface ISettings;
 

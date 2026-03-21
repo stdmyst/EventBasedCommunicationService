@@ -5,10 +5,11 @@
         <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <AssemblyName>EventBasedCommunicationService.Consumer</AssemblyName>
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\EventBasedCommunication.Core\EventBasedCommunication.Core.csproj" />
+      <ProjectReference Include="..\EventBasedCommunicationService\EventBasedCommunicationService.csproj" />
     </ItemGroup>
 
     <ItemGroup>

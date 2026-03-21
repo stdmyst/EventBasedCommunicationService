@@ -1,10 +1,10 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventBasedCommunication.Sender", "EventBasedCommunication.Sender\EventBasedCommunication.Sender.csproj", "{4EFA9000-DE55-4A43-8802-BACDBB0D29C0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventBasedCommunicationService.Publisher", "EventBasedCommunicationService.Publisher\EventBasedCommunicationService.Publisher.csproj", "{4EFA9000-DE55-4A43-8802-BACDBB0D29C0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventBasedCommunication.Core", "EventBasedCommunication.Core\EventBasedCommunication.Core.csproj", "{8E6DECEC-F303-40E6-BD06-CFBAD7A560D9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventBasedCommunicationService", "EventBasedCommunicationService\EventBasedCommunicationService.csproj", "{8E6DECEC-F303-40E6-BD06-CFBAD7A560D9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventBasedCommunication.Worker", "EventBasedCommunication.Worker\EventBasedCommunication.Worker.csproj", "{822F293C-597D-4C87-9439-CD8D2E3B706F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventBasedCommunicationService.Consumer", "EventBasedCommunicationService.Consumer\EventBasedCommunicationService.Consumer.csproj", "{822F293C-597D-4C87-9439-CD8D2E3B706F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

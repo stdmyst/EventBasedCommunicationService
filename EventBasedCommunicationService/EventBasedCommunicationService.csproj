@@ -2,9 +2,10 @@
 
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
-        <RootNamespace>EventBasedCommunication.Core</RootNamespace>
+        <RootNamespace>EventBasedCommunicationService</RootNamespace>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <AssemblyName>EventBasedCommunicationService</AssemblyName>
     </PropertyGroup>
 
     <ItemGroup>
