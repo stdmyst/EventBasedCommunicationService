@@ -1,7 +1,6 @@
 ﻿using System.Reflection;
 using EventBasedCommunicationService.Abstraction;
 using EventBasedCommunicationService.Implementation;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EventBasedCommunicationService;
@@ -12,8 +11,8 @@ public static class Extensions
     {
         services.RegisterEventHandlers(assemblies);
         
-        var eventResolver = new EventResolver(assemblies);
-        services.AddSingleton(eventResolver);
+        var eventManager = new EventManager(assemblies);
+        services.AddSingleton(eventManager);
         
         services.AddSingleton<IPublisher, EventService>();
         services.AddSingleton<ISubscriber, EventService>();

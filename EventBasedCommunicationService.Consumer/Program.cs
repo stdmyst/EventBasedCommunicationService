@@ -17,7 +17,8 @@ serviceCollection.AddSingleton(Options.Create(settings));
 
 var services = serviceCollection.BuildServiceProvider();
 
-var eventBus = services.GetService<ISubscriber>() ?? throw new NullReferenceException("ISubscriber service not found.");
+var eventBus = services.GetService<ISubscriber>() 
+               ?? throw new NullReferenceException($"{typeof(ISubscriber)} service not found.");
 
 var cancellationTokenSource = new CancellationTokenSource();
 await eventBus.Subscribe(exchange: "event-based-communication", cancellationTokenSource.Token);

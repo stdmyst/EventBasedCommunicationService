@@ -9,16 +9,15 @@ using RabbitMQ.Client.Events;
 
 namespace EventBasedCommunicationService.Implementation;
 
-internal class EventService
-    : IPublisher, ISubscriber
+internal class EventService : IPublisher, ISubscriber
 {
     private readonly TimeSpan _timeout;
     private readonly ConnectionFactory _connectionFactory;
     private readonly ILogger<EventService> _logger;
     private readonly IServiceProvider _services;
-    private readonly EventResolver _eventResolver;
+    private readonly EventManager _eventManager;
 
-    public EventService(EventResolver eventResolver, 
+    public EventService(EventManager eventManager, 
         IOptions<EventServiceSettings> options, 
         IServiceProvider services, 
         ILogger<EventService> logger)
@@ -31,7 +30,7 @@ internal class EventService
         _connectionFactory =  new ConnectionFactory { HostName = settings.RabbitMqHostname };
         _logger = logger;
         _services = services;
-        _eventResolver = eventResolver;
+        _eventManager = eventManager;
     }
 
     public async Task Publish<T>(T @event, string exchange) 
@@ -57,7 +56,7 @@ internal class EventService
         await channel.ExchangeDeclareAsync(exchange, ExchangeType.Direct, cancellationToken: cancellationToken);
         
         var queue  = await channel.QueueDeclareAsync(durable: true, exclusive: false, autoDelete: false, cancellationToken: cancellationToken);
-        foreach (var routingKey in _eventResolver.RoutingKeys)
+        foreach (var routingKey in _eventManager.RoutingKeys)
         {
             _logger.LogInformation(@"Binding ""{Exchange}"" exchange with queue: ""{Queue}"" by binding key: ""{BindingKey}""",
                 exchange, queue.QueueName, routingKey);
@@ -81,7 +80,7 @@ internal class EventService
 
     private async Task Handle(string routingKey, byte[] message)
     {
-        var subscribers = _eventResolver.GetSubscribers(routingKey);
+        var subscribers = _eventManager.GetSubscribers(routingKey);
         if (subscribers.Length == 0) return;
         
         var body = Encoding.UTF8.GetString(message);
@@ -91,7 +90,7 @@ internal class EventService
             var @event = JsonSerializer.Deserialize(body, subscriber) as IEvent;
             if (@event is null) continue;
             
-            var handlerInterfaces = _eventResolver.GetHandlers(subscriber);
+            var handlerInterfaces = _eventManager.GetHandlers(subscriber);
             if (handlerInterfaces.Length == 0)
             {
                 _logger.LogInformation(@"No registered handlers found for ""{Type}"".", @event.GetType().FullName);

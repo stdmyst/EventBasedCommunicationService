@@ -1,3 +1,9 @@
+## Summary
+
+The `EventSubscribeAttribute` attribute is used to indicate that an event requires subscription.
+
+The `IEventHandler<IEvent>` interface defines a handler that fires when an event occurs.
+
 ## Usage example log
 
 info: EventBasedCommunicationService.Implementation.EventService[0]

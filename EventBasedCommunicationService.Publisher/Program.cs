@@ -18,7 +18,8 @@ serviceCollection.AddSingleton(Options.Create(settings));
 
 var services = serviceCollection.BuildServiceProvider();
 
-var eventBus = services.GetService<IPublisher>() ?? throw new NullReferenceException("IPublisher service not found.");
+var eventBus = services.GetService<IPublisher>() 
+               ?? throw new NullReferenceException($"{typeof(IPublisher)} service not found.");
 
 var @event = new UserUpdated
 {

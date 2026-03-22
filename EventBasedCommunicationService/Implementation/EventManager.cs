@@ -4,14 +4,14 @@ using EventBasedCommunicationService.Models;
 
 namespace EventBasedCommunicationService.Implementation;
 
-internal class EventResolver
+internal class EventManager
 {
     private readonly Dictionary<string, HashSet<Type>> _events = new();
     private readonly Dictionary<Type, HashSet<Type>> _handlers = new();
     
     public string[] RoutingKeys => _events.Keys.ToArray();
     
-    public EventResolver(Assembly[] assembliesToScan)
+    public EventManager(Assembly[] assembliesToScan)
     {
         var types = assembliesToScan.SelectMany(assembly => assembly.GetTypes())
             .ToArray();
